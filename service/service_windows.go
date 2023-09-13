@@ -54,6 +54,7 @@ func (m *beatService) Execute(args []string, r <-chan svc.ChangeRequest, changes
 		case c := <-r:
 			combinedChan <- c
 		case <-m.done:
+			time.Sleep(5 * time.Second)
 			// exits consumption loop on termination and reports stopping
 			combinedChan <- svc.ChangeRequest{Cmd: svc.Shutdown}
 			return
@@ -86,12 +87,14 @@ loop:
 	trySendState(svc.StopPending, changes)
 	defer trySendState(svc.Stopped, changes)
 
+	time.Sleep(60 * time.Second)
 	log.Info("changed windows service state to svc.StopPending, invoking stopCallback")
 	m.stopCallback()
 
 	// Block until notifyWindowsServiceStopped below is called. This is required
 	// as the windows/svc package will transition the service to STOPPED state
 	// once this function returns.
+	time.Sleep(10 * time.Second)
 	<-m.done
 	log.Debug("windows service state changed to svc.Stopped")
 	return ssec, errno
@@ -175,6 +178,6 @@ func WaitExecutionDone() {
 
 	select {
 	case <-serviceInstance.executeFinished:
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(15 * time.Second):
 	}
 }
