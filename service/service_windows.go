@@ -92,7 +92,9 @@ loop:
 	// Block until notifyWindowsServiceStopped below is called. This is required
 	// as the windows/svc package will transition the service to STOPPED state
 	// once this function returns.
+
 	<-m.done
+	time.Sleep(3 * time.Second)
 	log.Debug("windows service state changed to svc.Stopped")
 	return ssec, errno
 }
@@ -175,6 +177,6 @@ func WaitExecutionDone() {
 
 	select {
 	case <-serviceInstance.executeFinished:
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(15 * time.Second):
 	}
 }
