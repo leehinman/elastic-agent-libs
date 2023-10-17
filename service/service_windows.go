@@ -71,7 +71,7 @@ loop:
 		switch c.Cmd {
 		case svc.Interrogate:
 			log.Info("received state change 'svc.Interrogate' from windows service manager")
-			changes <- c.CurrentStatus
+			//changes <- c.CurrentStatus
 			// Testing deadlock from https://code.google.com/p/winsvc/issues/detail?id=4
 			// log.Info("received state change 'svc.Interrogate' after first write to changes")
 			// time.Sleep(100 * time.Millisecond)
