@@ -73,10 +73,10 @@ loop:
 			log.Info("received state change 'svc.Interrogate' from windows service manager")
 			changes <- c.CurrentStatus
 			// Testing deadlock from https://code.google.com/p/winsvc/issues/detail?id=4
-			log.Info("received state change 'svc.Interrogate' after first write to changes")
-			time.Sleep(100 * time.Millisecond)
-			log.Info("received state change 'svc.Interrogate' after sleep")
-			changes <- c.CurrentStatus
+			// log.Info("received state change 'svc.Interrogate' after first write to changes")
+			// time.Sleep(100 * time.Millisecond)
+			// log.Info("received state change 'svc.Interrogate' after sleep")
+			// changes <- c.CurrentStatus
 			log.Info("received state change 'svc.Interrogate' after second write to changes")
 		// The svc.Cmd tye does not implement the Stringer interface and its
 		// underlying type is an integer, therefore it's needed to manually log them.
