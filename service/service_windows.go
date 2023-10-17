@@ -25,6 +25,8 @@ import (
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 
+	"github.com/apex/log"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 )
 
@@ -45,16 +47,20 @@ var serviceInstance = &beatService{
 func (m *beatService) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
 	changes <- svc.Status{State: svc.StartPending}
+	log.Info("Execute, StartPending sent")
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
+	log.Info("Execute, Running sent")
 
 	log := logp.NewLogger("service_windows")
 	combinedChan := make(chan svc.ChangeRequest)
 	go func() {
 		select {
 		case c := <-r:
+			log.Info("Execute, writing to combinedChan")
 			combinedChan <- c
 		case <-m.done:
 			// exits consumption loop on termination and reports stopping
+			log.Info("Execute, done channel is closed")
 			combinedChan <- svc.ChangeRequest{Cmd: svc.Shutdown}
 			return
 		}
@@ -64,11 +70,14 @@ loop:
 	for c := range combinedChan {
 		switch c.Cmd {
 		case svc.Interrogate:
+			log.Info("received state change 'svc.Interrogate' from windows service manager")
 			changes <- c.CurrentStatus
 			// Testing deadlock from https://code.google.com/p/winsvc/issues/detail?id=4
+			log.Info("received state change 'svc.Interrogate' after first write to changes")
 			time.Sleep(100 * time.Millisecond)
+			log.Info("received state change 'svc.Interrogate' after sleep")
 			changes <- c.CurrentStatus
-
+			log.Info("received state change 'svc.Interrogate' after second write to changes")
 		// The svc.Cmd tye does not implement the Stringer interface and its
 		// underlying type is an integer, therefore it's needed to manually log them.
 		case svc.Stop:
@@ -100,7 +109,9 @@ loop:
 func trySendState(s svc.State, changes chan<- svc.Status) {
 	select {
 	case changes <- svc.Status{State: s}:
+		log.Info("trySendState, wrote state")
 	case <-time.After(500 * time.Millisecond): // should never happen, but don't make this blocking
+		log.Info("trySendState, time.After ran")
 	}
 }
 
@@ -175,6 +186,8 @@ func WaitExecutionDone() {
 
 	select {
 	case <-serviceInstance.executeFinished:
+		log.Info("WaitExectuionDone, executeFinished")
 	case <-time.After(500 * time.Millisecond):
+		log.Info("WaitExectuionDone, time.After ran")
 	}
 }
